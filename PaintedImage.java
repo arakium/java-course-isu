@@ -3,13 +3,14 @@ import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import javax.swing.*;
 
-public class PaintedImage extends DrawingGUI {
-    private static final int numBlobs = 20000;			// setup: how many blobs
-    private static final int numToMove = 5000;			// setup: how many blobs to animate each frame
 
-    private BufferedImage original;						// the picture to paint
-    private BufferedImage result;						// the picture being painted
-    private ArrayList<Blob> blobs;						// the blobs representing the picture
+public class PaintedImage extends DrawingGUI {
+    private static final int numBlobs = 20000;			//
+    private static final int numToMove = 5000;			//
+
+    private BufferedImage original;
+    private BufferedImage result;
+    private ArrayList<Blob> blobs;
 
     public PaintedImage(BufferedImage original) {
         super("Animated Picture", original.getWidth(), original.getHeight());
@@ -17,20 +18,13 @@ public class PaintedImage extends DrawingGUI {
         this.original = original;
         result = new BufferedImage(original.getWidth(), original.getHeight(), BufferedImage.TYPE_INT_ARGB);
 
-        // Create a bunch of random blobs.
-        blobs = new ArrayList<Blob>();
-        for (int i=0; i<numBlobs; i++) {
-            int x = (int)(original.getWidth()*Math.random());
-            int y = (int)(original.getHeight()*Math.random());
-            blobs.add(new Wanderer(x, y, 1));
-        }
+        generateBlobsList();
 
-        // Timer drives the animation.
         startTimer();
     }
 
     /**
-     * DrawingGUI method, here just drawing all the blobs
+     * DrawingGUI method
      */
     @Override
     public void draw(Graphics g) {
@@ -39,9 +33,33 @@ public class PaintedImage extends DrawingGUI {
             blob.draw(g);
         }
     }
+    public void generateBlobsList() {
+        blobs = new ArrayList<Blob>();
+        for (int i=0; i<numBlobs; i++) {
+            int x = (int)(width*Math.random());
+            int y = (int)(height*Math.random());
+            Color color = new Color((int) (Math.random() * 16777216));
+            blobs.add(new WanderingPixel(x, y, 1, color));
+        }
+    }
+    @Override
+    public void handleMousePress(int x, int y) {
+
+        if (timer.isRunning()) { //Clears the current image into a blank image
+            stopTimer();
+            blobs.clear();
+            result = original;
+            repaint();
+        }
+        else { // repopulate blobs on a blank image
+            result = new BufferedImage(original.getWidth(), original.getHeight(), BufferedImage.TYPE_INT_ARGB);
+            generateBlobsList();
+            startTimer();
+        }
+    }
 
     /**
-     * DrawingGUI method, here moving some of the blobs
+     * DrawingGUI method
      */
     @Override
     public void handleTimer() {
@@ -56,7 +74,6 @@ public class PaintedImage extends DrawingGUI {
             blob.step();
 
         }
-        // Now update the drawing
         repaint();
 
     }
