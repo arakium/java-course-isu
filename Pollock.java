@@ -3,162 +3,105 @@ import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import javax.swing.*;
 
-/**
- * Painting random colors with wanderers
- * Template for SA-2, Dartmouth CS 10, Spring 2016
- * 
- * @author Chris Bailey-Kellogg, Dartmouth CS 10, Spring 2016
- */
+
 public class Pollock extends DrawingGUI {
-	private static final int width = 800, height = 600; // setup: window size
-	private static final int numBlobs = 20000;			// setup: how many blobs
-	private static final int numToMove = 5000;			// setup: how many blobs to animate each frame
+    private static final int width = 800, height = 600;
+    private static final int numBlobs = 20000;
+    private static final int numToMove = 10000;
 
-	private BufferedImage result;						// the picture being painted
-	private ArrayList<Blob> blobs;						// the blobs representing the picture
-	
-	public Pollock() {
-		super("Pollock", width, height);
-		
-		result = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
-		
-		// Create a bunch of random blobs.
-		blobs = new ArrayList<Blob>();
-		for (int i=0; i<numBlobs; i++) {
-			int x = (int)(width*Math.random());
-			int y = (int)(height*Math.random());
-			// Create a blob with a random color
-			// TODO: YOUR CODE HERE
-			blobs.add(new Wanderer(x, y, 1));
-		}
+    private BufferedImage result;
+    private ArrayList<Blob> blobs;
+    public Pollock() {
+        super("Pollock", width, height);
 
-		// Timer drives the animation.
-		startTimer();
-	}
+        result = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
 
-	/**
-	 * DrawingGUI method, here just drawing all the blobs
-	 */
-	@Override
-	public void draw(Graphics g) {
-		g.drawImage(result, 0, 0, null);
-		for (Blob blob : blobs) {
-			blob.draw(g);
-		}		
-	}
+        // Create a bunch of random blobs.
+        generateBlobsList();
 
-	/**
-	 * DrawingGUI method, here moving some of the blobs
-	 */
-	@Override
-	public void handleTimer() {
-		for (int b = 0; b < numToMove; b++) {
-			// Pick a random blob, leave a trail where it is, and ask it to move.
-			Blob blob = blobs.get((int)(Math.random()*blobs.size()));
-			int x = (int)blob.getX(), y = (int)blob.getY();
-			// Careful to stay within the image
-			if (x>=0 && x<width && y>=0 && y<height) {
-				// Leave a trail of the blob's color
-				// TODO: YOUR CODE HERE
-				Color color = Color.BLACK;
-				result.setRGB(x, y, color.getRGB());				
-			}
-			blob.step();
-		}
-		// Now update the drawing
-		repaint();
-	}
+        startTimer();
+    }
+    /**
+    * Fills the resultant buffer image with blobs
+    * @author Abdulrahman Abdulkader
+     */
+    public void generateBlobsList() {
+        blobs = new ArrayList<Blob>();
+        for (int i=0; i<numBlobs; i++) {
+            int x = (int)(width*Math.random());
+            int y = (int)(height*Math.random());
+            Color color = new Color((int) (Math.random() * 16777216));
+            blobs.add(new WanderingPixel(x, y, 2, color));
+        }
+    }
 
-	public static void main(String[] args) {
-		SwingUtilities.invokeLater(new Runnable() {
-			public void run() {
-				new Pollock();
-			}
-		});
-	}
-}
-import java.awt.*;
-import java.awt.image.BufferedImage;
-import java.util.ArrayList;
-import javax.swing.*;
+    /**
+     * Clears the current canvas of all paintings by creating a new buffered image
+     * @author Abdulrahman Abdulkader
+     */
+    public void clearCanvas() {
+        stopTimer();
+        blobs.clear();
+        result = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+        repaint();
+    }
 
-/**
- * Painting random colors with wanderers
- * Template for SA-2, Dartmouth CS 10, Spring 2016
- * 
- * @author Chris Bailey-Kellogg, Dartmouth CS 10, Spring 2016
- */
-public class Pollock extends DrawingGUI {
-	private static final int width = 800, height = 600; // setup: window size
-	private static final int numBlobs = 20000;			// setup: how many blobs
-	private static final int numToMove = 5000;			// setup: how many blobs to animate each frame
+    /**
+     * DrawingGUI method
+     */
+    @Override
+    public void draw(Graphics g) {
+        g.drawImage(result, 0, 0, null);
+        for (Blob blob : blobs) {
+            blob.draw(g);
+        }
+    }
 
-	private BufferedImage result;						// the picture being painted
-	// CHANGE 1: ArrayList now stores objects of type WanderingPixel
-	private ArrayList<WanderingPixel> blobs;						// the blobs representing the picture
-	
-	public Pollock() {
-		super("Pollock", width, height);
-		
-		result = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
-		
-		// Create a bunch of random blobs. (Changed to WanderingPixels)
-		blobs = new ArrayList<WanderingPixel>();
-		for (int i=0; i<numBlobs; i++) {
-			int x = (int)(width*Math.random());
-			int y = (int)(height*Math.random());
-			// Create a blob with a random color
-			// TODO: YOUR CODE HERE
-			// CHANGE 2: Added code that creates a WanderingPixel
-			// with a random color and adds it to the blob ArrayList
-			Color randColor = new Color((int) (Math.random()*16777216));
-			blobs.add(new WanderingPixel(x, y, 1, randColor));
-		}
 
-		// Timer drives the animation.
-		startTimer();
-	}
+    @Override
+    public void handleTimer() {       for (int b = 0; b < numToMove; b++) {
+            // Pick a random blob, leave a trail where it is, and ask it to move.
+            Blob blob = blobs.get((int)(Math.random()*blobs.size()));
+            int x = (int)blob.getX(), y = (int)blob.getY();
+            if (x>=0 && x<width && y>=0 && y<height) {
+                Color color = ((WanderingPixel)blob).getColor();
+                result.setRGB(x, y, color.getRGB());
+            }
+            blob.step();
+        }
+        repaint();
+    }
 
-	/**
-	 * DrawingGUI method, here just drawing all the blobs
-	 */
-	@Override
-	public void draw(Graphics g) {
-		g.drawImage(result, 0, 0, null);
-		for (Blob blob : blobs) {
-			blob.draw(g);
-		}		
-	}
-
-	/**
-	 * DrawingGUI method, here moving some of the blobs
-	 */
-	@Override
-	public void handleTimer() {
-		for (int b = 0; b < numToMove; b++) {
-			// Pick a random blob, leave a trail where it is, and ask it to move.
-			WanderingPixel blob = blobs.get((int)(Math.random()*blobs.size()));
-			int x = (int)blob.getX(), y = (int)blob.getY();
-			// Careful to stay within the image
-			if (x>=0 && x<width && y>=0 && y<height) {
-				// Leave a trail of the blob's color
-				// TODO: YOUR CODE HERE
-				// CHANGE 3: Added code that paints the result canvas
-				// based on the blob's color
-				Color color = blob.getColor();
-				result.setRGB(x, y, color.getRGB());				
-			}
-			blob.step();
-		}
-		// Now update the drawing
-		repaint();
-	}
-
-	public static void main(String[] args) {
-		SwingUtilities.invokeLater(new Runnable() {
-			public void run() {
-				new Pollock();
-			}
-		});
-	}
+    @Override
+    public void handleKeyPress(char k) {
+        switch (k) {
+            case 'c': // clears the canvas
+                if (timer.isRunning()) {
+                    clearCanvas();
+                    System.out.println("The canvas was painted white.");
+                }
+                else {
+                    System.out.println("[ERROR] The canvas is already cleared.");
+                }
+                break;
+            case 'p': // Repopulate the canvas
+                if (!timer.isRunning()) {
+                    clearCanvas();
+                    generateBlobsList();
+                    startTimer();
+                    System.out.println("The canvas is becoming colorful!");
+                }
+                else {
+                    System.out.println("[ERROR] The canvas is already colorful!");
+                }
+                break;
+        }
+    }
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(new Runnable() {
+            public void run() {
+                new Pollock();
+            }
+        });
+    }
 }
